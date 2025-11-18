@@ -7,8 +7,30 @@ Executors are like microservices and are designed to interact with other platfor
 
 <img src="overview.png" alt="Overview" width="500">
 
-## Setting up a development environment
-The following commands will use Docker Compose to set up and configure a Colonies server, a TimescaleDB, a Minio server, and a Docker Executor. To set up a production environment, it is recommended to use Kubernetes.
+## Installing the Colonies CLI
+The Colonies CLI can be downloaded [here](https://github.com/colonyos/colonies/releases). Linux, Windows, and MacOS is supported.
+
+Move the binary to a directory availble in *PATH* e.g. **/usr/local/bin**.
+
+```bash
+sudo mv colonies /usr/local/bin
+```
+
+On MacOS there is an error first time you run it. You need to grant the Colonies CLI permission to execute. Open System Settings, go to Privacy & Security, and click on the *Allow* button next to *colonies* to enable it to execute.
+
+Test that the CLI works.
+
+```bash
+colonies version
+╭───────────────┬──────────────────────╮
+│ CLI version   │ a2064c15             │
+│ CLI buildtime │ 2025-11-11 14:04:15Z │
+╰───────────────┴──────────────────────╯
+```
+
+
+## Starting a server and executor
+The docker compose file will set up and configure TimescaleDB, A Colonies server and a Colonies executor.
 
 On Mac, alternative to Docker can be to install OrbStack.
 
@@ -17,73 +39,31 @@ brew install orbstack
 orb
 ```
 
-*Note!* The *docker-compose.env* file contains credentials and configuration and must be sourced before using the Colonies CLI command.
+*Note!* The *docker-compose.env* file contains credentials and configuration to start and interact with the Colonies server.
 
 On Mac or Linux type:
 
 ```bash
-wget https://raw.githubusercontent.com/colonyos/colonies/main/docker-compose.env; 
-source docker-compose.env; 
+wget https://raw.githubusercontent.com/colonyos/colonies/main/docker-compose.env;
 wget https://raw.githubusercontent.com/colonyos/colonies/main/docker-compose.yml;
-docker-compose up
+source docker-compose.env; 
+docker compose up
 ```
 
 On Windows type:
 ```bash
-wget https://raw.githubusercontent.com/colonyos/colonies/main/windowsenv.bat 
-windowsenv.bat
+wget https://raw.githubusercontent.com/colonyos/colonies/main/windowsenv.bat
 wget https://raw.githubusercontent.com/colonyos/colonies/main/docker-compose.yml
-docker-compose up
+windowsenv.bat
+docker compose up
 ```
+Note that all commands must be entered seperately on Windows.
 
-Note that all three commands must be types seperately on Windows.
-
-Press control-c to exit.
 
 To remove all data, type:
 
 ```bash
-docker-compose down --volumes
-```
-
-## Installing the Colonies CLI
-The Colonies CLI can be downloaded [here](https://github.com/colonyos/colonies/releases). Linux, Window, and Apple is supported.
-
-Copy the binary to directory availble in the *PATH* e.g. **/usr/local/bin**.
-
-```bash
-sudo cp colonies /use/local/bin
-```
-
-```bash
-colonies --help
-```
-
-On MacOS there is an error first time you run it. You need to grant the Colonies CLI permission to execute. Open System Settings, go to Privacy & Security, and click on the *Allow* button next to *colonies* to enable it to execute.
-
-Start another terminal and run the command below to load the credentials and settings, allowing the Colonies CLI to connect to the Colonies server started with Docker compose.
-
-```bash
-source docker-compose.env
-```
-
-On Window:
-```bash
-windowsenv.bat
-```
-
-We can now interact with the Colonies server, and for example, list available executors.
-
-```bash
-colonies executor ls
-```
-
-```console
-╭────────────┬────────────────────┬──────────┬─────────────────────╮
-│ NAME       │ TYPE               │ LOCATION │ LAST HEARD FROM     │
-├────────────┼────────────────────┼──────────┼─────────────────────┤
-│ dev-docker │ container-executor │ n/a      │ 2024-06-29 13:37:27 │
-╰────────────┴────────────────────┴──────────┴─────────────────────╯
+docker compose down --volumes
 ```
 
 ## Running a job
