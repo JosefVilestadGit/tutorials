@@ -1,0 +1,118 @@
+name: colonies-demo
+services:
+  database:
+    image: timescale/timescaledb:latest-pg17
+    environment:
+      POSTGRES_PASSWORD: ${COLONIES_DB_PASSWORD}
+    networks:
+      - database
+    healthcheck:
+      test: "pg_isready -U postgres"
+      interval: 5s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+    volumes:
+      - database:/var/lib/postgresql/data
+
+  server:
+    image: colonyos/colonies:latest
+    env_file:
+      - ./.env
+    networks:
+      - frontend
+      - database
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      COLONIES_DB_HOST: database
+    volumes:
+      - etcd:/var/colonies/etcd
+    expose:
+      - "80"
+      - "50001"
+    healthcheck:
+      test: ["CMD-SHELL", "colonies server status"]
+      interval: 5s
+      retries: 5
+      start_period: 10s
+      timeout: 10s
+    command: sh -c "colonies server start --initdb --port $COLONIES_SERVER_HTTP_PORT --relayport 25100 --etcdname server1 --etcdhost server --etcdclientport 23100 --etcdpeerport 24100 --initial-cluster server1=server:24100:25100:$COLONIES_SERVER_HTTP_PORT --etcddatadir /var/colonies/etcd --insecure"
+
+  setup:
+    image: colonyos/colonies:latest
+    env_file:
+      - ./.env
+    networks:
+      - frontend
+    depends_on:
+      server:
+        condition: service_healthy
+    environment:
+      # Override client config to point to server service
+      COLONIES_CLIENT_HTTP_HOST: server
+      COLONIES_CLIENT_GRPC_HOST: server
+      COLONIES_SERVER_HOST: server
+    entrypoint: >
+      /bin/sh -c "
+      echo 'Adding colony: $COLONIES_COLONY_NAME';
+      colonies colony add --name $COLONIES_COLONY_NAME --colonyid $COLONIES_COLONY_ID;
+      echo 'Adding user: myuser';
+      colonies user add --name='myuser' --email='' --phone='' --userid=$COLONIES_ID;
+      echo 'Setup complete!';
+      "
+
+  executor:
+    image: colonyos/dockerexecutor:latest
+    env_file:
+      - ./.env
+    networks:
+      - frontend
+    restart: unless-stopped
+    depends_on:
+      server:
+        condition: service_healthy
+      setup:
+        condition: service_completed_successfully
+    environment:
+      # Override client config to point to server service
+      COLONIES_CLIENT_HTTP_HOST: server
+      COLONIES_SERVER_HOST: server
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp/colonies:/tmp/colonies
+    privileged: true
+
+  cli:
+    image: colonyos/colonies:latest
+    container_name: colonies-cli
+    env_file:
+      - ./.env
+    networks:
+      - frontend
+    depends_on:
+      executor:
+        condition: service_started
+    environment:
+      # Override client config to point to server service
+      COLONIES_CLIENT_HTTP_HOST: server
+      COLONIES_CLIENT_GRPC_HOST: server
+      COLONIES_SERVER_HOST: server
+    volumes:
+      - ./examples:/root/examples
+    stdin_open: true
+    tty: true
+    command: sleep infinity
+
+networks:
+  frontend:
+    internal: true
+    attachable: true
+  database:
+    internal: true
+    attachable: false
+
+volumes:
+  database:
+  etcd:
