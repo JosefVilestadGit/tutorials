@@ -1,11 +1,10 @@
-# Getting started
-The picture below shows an overview of the components of ColonyOS. The Colonies server provides an API used by users or applications to run jobs (processes). Executors connect to the Colonies server to receive process assignments, execute the processes, and finally report the results back to the Colonies server. ColonyOS also provides data management functionality through a meta-filesystem called the Colony Filesystem (ColonyFS).
+# Installation
 
-Unlike a traditional filesystem, ColonyFS doesn't store the actual files but instead stores metadata about the files. This metadata includes information such as file names, checksums, internet addresses of servers from which to fetch data, and details about the protocols used. In this tutorial, we will use Minio S3 as a backend to store data.
+## Quick start
 
-Executors are like microservices and are designed to interact with other platforms. In this tutorial, we are going to use container executors, which are a family of executors designed to run software containers. A *Docker Executor* is designed to run Docker containers. A *K8s Executor* runs processes as Kubernetes batch jobs. An *HPC Executor* runs processes as Singularity containers using Slurm. An executor can perform any kind of computation. In the [next tutorials](../3-python/tutorial.md), we will develop a custom executor in Python.
+The fastest way to try ColonyOS is to use the docker compose in this directory.
 
-<img src="overview.png" alt="Overview" width="500">
+It creates a colony with a server, executor and a container with example files.
 
 ## Installing the Colonies CLI
 The Colonies CLI can be downloaded [here](https://github.com/colonyos/colonies/releases). Linux, Windows, and MacOS is supported.
